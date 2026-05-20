@@ -95,18 +95,9 @@ class BrowserConfig(BaseModel):
     submit_url: str = "https://contributor.stock.adobe.com/en/uploads"
 
 
-class PixtaContributorConfig(BaseModel):
-    email: str = ""
-    password: str = ""
-
-
-class PixtaConfig(BaseModel):
-    contributor: PixtaContributorConfig = PixtaContributorConfig()
-
-
 class CloakConfig(BaseModel):
     """CloakBrowser upload configuration (supports multiple platforms)."""
-    platform: str = "pixta"  # pixta | adobe-stock
+    platform: str = "adobe-stock"  # adobe-stock | freepik
     headless: bool = False
     slow_mo: int = 500
     humanize: bool = True
@@ -130,7 +121,6 @@ class FreepikConfig(BaseModel):
 
 class Config(BaseModel):
     adobe: AdobeConfig = AdobeConfig()
-    pixta: PixtaConfig = PixtaConfig()
     freepik: FreepikConfig = FreepikConfig()
     generation: GenerationConfig = GenerationConfig()
     output: OutputConfig = OutputConfig()
@@ -167,10 +157,7 @@ def load_config(path: str = "config.yaml") -> Config:
         cfg.adobe.contributor.email = os.getenv("ADOBE_STOCK_EMAIL", "")
     if os.getenv("ADOBE_STOCK_PASSWORD"):
         cfg.adobe.contributor.password = os.getenv("ADOBE_STOCK_PASSWORD", "")
-    if os.getenv("PIXTA_EMAIL"):
-        cfg.pixta.contributor.email = os.getenv("PIXTA_EMAIL", "")
-    if os.getenv("PIXTA_PASSWORD"):
-        cfg.pixta.contributor.password = os.getenv("PIXTA_PASSWORD", "")
+
     if os.getenv("FREEPIK_FTP_HOST"):
         cfg.freepik.ftp.host = os.getenv("FREEPIK_FTP_HOST", "")
     if os.getenv("FREEPIK_FTP_USERNAME"):

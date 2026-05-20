@@ -242,7 +242,7 @@ def batch(batch_file: str, count: int, no_upload: bool, submit: bool, freepik: b
 @click.option("--count", "-n", default=1, help="Number of images to generate")
 @click.option("--output", "-o", default=None, help="Output directory")
 @click.option("--provider", "-p", default=None, help="Generation provider")
-@click.option("--platform", "--pl", default=None, help="Target platform (pixta, adobe-stock)")
+@click.option("--platform", "--pl", default=None, help="Target platform (adobe-stock, freepik)")
 @click.option("--ai-key", default=None, help="API key for metadata generation")
 @click.option("--headless", is_flag=True, help="Run CloakBrowser headless")
 @click.option("--skip-upload", is_flag=True, help="Skip upload, just login + metadata")
@@ -263,7 +263,7 @@ def cloak(
     password: Optional[str],
 ):
     """
-    使用 CloakBrowser 生成圖片並上傳到圖庫平台（PIXTA / Adobe Stock）。
+    使用 CloakBrowser 生成圖片並上傳到圖庫平台（Adobe Stock / Freepik）。
 
     PROMPT: 圖片的文字描述
 
@@ -286,12 +286,12 @@ def cloak(
         sys.exit(1)
 
     # Resolve credentials
-    if plat == "pixta":
-        cred_email = email or cfg.pixta.contributor.email
-        cred_password = password or cfg.pixta.contributor.password
-    elif plat == "adobe-stock":
+    if plat == "adobe-stock":
         cred_email = email or cfg.adobe.contributor.email
         cred_password = password or cfg.adobe.contributor.password
+    elif plat == "freepik":
+        cred_email = email or (cfg.freepik.contributor.email if hasattr(cfg.freepik, 'contributor') else "")
+        cred_password = password or (cfg.freepik.contributor.password if hasattr(cfg.freepik, 'contributor') else "")
     else:
         cred_email = email or ""
         cred_password = password or ""
@@ -457,24 +457,6 @@ def portal_upload(
 @click.option("--platform", default=None, help="Show requirements for a specific platform")
 def requirements(platform: Optional[str]):
     """Show image requirements for stock platforms."""
-    if platform and platform == "pixta":
-        console.print(Panel.fit(
-            "[bold]PIXTA Image Requirements[/bold]\n\n"
-            "  Resolution:  min 3 MP\n"
-            "  Format:      JPEG, PNG\n"
-            "  Max size:    30 MB\n"
-            "  Title:       max 100 chars (Japanese)\n"
-            "  Keywords:    min 5, max 20 (Japanese)\n"
-            "  AI content:  ✅ Accepted (must tag)\n\n"
-            "[bold]Upload:[/bold] Web browser only (no FTP)\n"
-            "  https://pixta.jp/contributor/upload/\n\n"
-            "[bold]Authentication:[/bold]\n"
-            "  PIXTA account login (may need email verification)\n"
-            "  Use: python3 main.py cloak \"prompt\" --platform pixta",
-            border_style="cyan",
-        ))
-        return
-
     console.print(Panel.fit(
         "[bold]Adobe Stock Image Requirements[/bold]\n\n"
         "  Resolution:  min 4 MP (e.g. 2400×1600)\n"
@@ -498,7 +480,7 @@ def requirements(platform: Optional[str]):
 
 
 @cli.command()
-@click.option("--platform", "--pl", default="freepik", help="Target platform (pixta, adobe-stock, freepik)")
+@click.option("--platform", "--pl", default="freepik", help="Target platform (adobe-stock, freepik)")
 @click.option("--email", default=None, help="Platform login email")
 @click.option("--password", default=None, help="Platform login password")
 @click.option("--headless", is_flag=True, help="Run CloakBrowser headless")
@@ -523,10 +505,7 @@ def upload(
     console.print(f"Found {len(image_paths)} images to upload.")
 
     # Resolve credentials
-    if platform == "pixta":
-        cred_email = email or cfg.pixta.contributor.email
-        cred_password = password or cfg.pixta.contributor.password
-    elif platform == "adobe-stock":
+    if platform == "adobe-stock":
         cred_email = email or cfg.adobe.contributor.email
         cred_password = password or cfg.adobe.contributor.password
     elif platform == "freepik":

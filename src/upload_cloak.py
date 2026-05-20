@@ -141,13 +141,6 @@ class PlatformConfig:
 
 # ── Platform Presets ────────────────────────────────────────
 
-PIXTA_CONFIG = PlatformConfig(
-    name="pixta",
-    login_url="https://pixta.jp/",
-    upload_url="https://pixta.jp/contributor/upload/",
-    cookie_cache="./.cookies/pixta.json",
-)
-
 ADOBE_STOCK_CONFIG = PlatformConfig(
     name="adobe-stock",
     login_url="https://contributor.stock.adobe.com/en/uploads",
@@ -164,7 +157,6 @@ FREEPIK_CONFIG = PlatformConfig(
 )
 
 PLATFORMS: dict[str, PlatformConfig] = {
-    "pixta": PIXTA_CONFIG,
     "adobe-stock": ADOBE_STOCK_CONFIG,
     "freepik": FREEPIK_CONFIG,
 }
@@ -178,7 +170,7 @@ class CloakUploader:
 
     Sync context manager. Usage:
 
-        with CloakUploader(platform="pixta") as uploader:
+        with CloakUploader(platform="adobe-stock") as uploader:
             uploader.login(email="...", password="...")
             uploader.upload_files(["/path/to/img1.jpg", ...])
             uploader.fill_metadata(metadata_list)
@@ -187,7 +179,7 @@ class CloakUploader:
 
     def __init__(
         self,
-        platform: str = "pixta",
+        platform: str = "adobe-stock",
         headless: bool = False,
         slow_mo: int = 500,
         cookie_cache: str | None = None,

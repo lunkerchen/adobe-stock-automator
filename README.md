@@ -39,7 +39,7 @@ python3 main.py upload --platform freepik
 | 指令 | 用途 |
 |------|------|
 | `generate` | AI 生圖 → 6MP Upscale → CSV 產生 → 網頁上傳（可帶 `--freepik` 同步產生 Freepik 輸出） |
-| `upload` | 使用 CloakBrowser 上傳 output 目錄下的所有現有圖片 (支援 pixta, adobe-stock, freepik) |
+| `upload` | 使用 CloakBrowser 上傳 output 目錄下的所有現有圖片 (支援 adobe-stock, freepik) |
 | `cloak` | 使用 CloakBrowser 整合「生圖 + 網頁自動化上傳」流程 |
 | `portal_upload` | Adobe Stock Portal 專用上傳模組 |
 | `batch` | 批次處理 prompts 檔案 |
@@ -67,7 +67,7 @@ adobe-stock-automator/
 │   ├── upload.py               # FTP / FTPS (Explicit TLS) 上傳邏輯
 │   ├── submit_browser.py       # Playwright 瀏覽器自動化
 │   ├── portal_upload.py        # Adobe Portal 專用上傳
-│   └── upload_cloak.py         # CloakBrowser Stealth 上傳 (PIXTA / Freepik)
+│   └── upload_cloak.py         # CloakBrowser Stealth 上傳 (Adobe Stock / Freepik)
 ├── config.example.yaml
 ├── prompts_50.txt              # 50 個商用 prompt 範本
 ├── gen_metadata.py             # 圖片批次優化與 metadata 重新產生工具
@@ -81,7 +81,6 @@ adobe-stock-automator/
 |------|---------------------------|-----------------|------|
 | **Adobe Stock** | ✅ 支援自動填寫欄位與 AI 標籤 | ❌ 官方已不活躍 | 推薦使用 Web 模式或 CSV 導入 |
 | **Freepik** | ✅ 支援自動拖曳圖片 + CSV 一鍵導入 | ✅ 支援 FTPS (Explicit TLS) | 等級 3 以下帳號使用 Web 模式；等級 3 以上可用 FTPS |
-| **PIXTA** | ✅ 支援網頁上傳與手動/Cookie 登入 | ❌ 官方不支援 FTP | 僅能使用瀏覽器上傳 |
 
 ## 隱私安全
 
