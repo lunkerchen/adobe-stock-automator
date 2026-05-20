@@ -5,10 +5,12 @@ from pathlib import Path
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent))
-from src.metadata import write_metadata_csv, ImageMetadata
+from src.metadata import write_metadata_csv, write_freepik_csv, ImageMetadata
+from src.config import load_config, get_config
 
 ROOT = Path(__file__).parent
 OUTPUT = ROOT / "output"
+load_config(str(ROOT / "config.yaml"))
 
 # 1. Load prompts from file
 prompts = []
@@ -146,22 +148,13 @@ for i, img_path in enumerate(images):
     prompt = prompts[i % len(prompts)] if i < len(prompts) else f"Stock photo number {i+1}"
     cat = classify_category(prompt)
 
-    # Upscale to 6MP
+    # Upscale to 6MP using common helper
+    from src.image_utils import upscale_image_to_mp
+    upscale_image_to_mp(img_path, target_mp=6.0, quality=95)
+    
+    # Reload to get actual size
     img = Image.open(img_path)
-    w, h = img.size
-    target_w, target_h = 3000, 2000
-    ratio = w / h
-    if ratio > 1:
-        target_h = int(target_w / ratio)
-    else:
-        target_w = int(target_h * ratio)
-    while target_w * target_h < 4000000:
-        target_w = int(target_w * 1.1)
-        target_h = int(target_h * 1.1)
-
-    img_resized = img.resize((target_w, target_h), Image.LANCZOS)
-    # Save as JPEG replacing the original
-    img_resized.save(str(img_path), "JPEG", quality=95)
+    target_w, target_h = img.size
     mp = target_w * target_h / 1000000
 
     # Generate keywords from prompt
@@ -193,6 +186,8 @@ for i, img_path in enumerate(images):
         category=cat,
         ai_generated=True,
         has_releases=False,
+        prompt=prompt,
+        model=get_config().freepik.metadata.model,
     )
     metadata_list.append(meta)
 
@@ -202,5 +197,7 @@ for i, img_path in enumerate(images):
 # Write CSV
 csv_path = OUTPUT / "metadata.csv"
 write_metadata_csv(metadata_list, str(csv_path))
+write_freepik_csv(metadata_list, str(OUTPUT / "metadata_freepik.csv"))
 print(f"\nComplete: {len(metadata_list)} images")
-print(f"CSV: {csv_path}")
+print(f"CSV (Adobe): {csv_path}")
+print(f"CSV (Freepik): {OUTPUT / 'metadata_freepik.csv'}")

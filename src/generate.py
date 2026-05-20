@@ -20,13 +20,21 @@ from .config import get_config
 
 
 class ImageGenerator(ABC):
-    @abstractmethod
     def generate(self, prompt: str, output_path: str) -> str:
+        path = self._generate_impl(prompt, output_path)
+        
+        # Auto upscale to meet stock agency requirements (min 4MP, target 6MP)
+        from .image_utils import upscale_image_to_mp
+        upscale_image_to_mp(path, target_mp=6.0, quality=get_config().output.quality)
+        return path
+
+    @abstractmethod
+    def _generate_impl(self, prompt: str, output_path: str) -> str:
         ...
 
 
 class OpenAIGenerator(ImageGenerator):
-    def generate(self, prompt: str, output_path: str) -> str:
+    def _generate_impl(self, prompt: str, output_path: str) -> str:
         cfg = get_config().generation.openai
         api_key = cfg.api_key or os.getenv("OPENAI_API_KEY", "")
         if not api_key:
@@ -55,7 +63,7 @@ class OpenAIGenerator(ImageGenerator):
 
 
 class StabilityGenerator(ImageGenerator):
-    def generate(self, prompt: str, output_path: str) -> str:
+    def _generate_impl(self, prompt: str, output_path: str) -> str:
         cfg = get_config().generation.stability
         api_key = cfg.api_key or os.getenv("STABILITY_API_KEY", "")
         if not api_key:
@@ -75,7 +83,7 @@ class StabilityGenerator(ImageGenerator):
 
 
 class ReplicateGenerator(ImageGenerator):
-    def generate(self, prompt: str, output_path: str) -> str:
+    def _generate_impl(self, prompt: str, output_path: str) -> str:
         cfg = get_config().generation.replicate
         token = cfg.api_token or os.getenv("REPLICATE_API_TOKEN", "")
         if not token:
@@ -103,16 +111,24 @@ class ReplicateGenerator(ImageGenerator):
 
 
 class LocalGenerator(ImageGenerator):
-    def generate(self, prompt: str, output_path: str) -> str:
+    _pipeline = None
+
+    def _generate_impl(self, prompt: str, output_path: str) -> str:
         cfg = get_config().generation.local
         try:
             import torch
             from diffusers import StableDiffusion3Pipeline
         except ImportError:
             raise ImportError("Requires: pip install diffusers torch transformers accelerate")
-        pipe = StableDiffusion3Pipeline.from_pretrained(
-            cfg.model_id, torch_dtype=torch.float16 if cfg.device == "cuda" else torch.float32)
-        pipe.to(cfg.device)
+        
+        if LocalGenerator._pipeline is None:
+            pipe = StableDiffusion3Pipeline.from_pretrained(
+                cfg.model_id, torch_dtype=torch.float16 if cfg.device == "cuda" else torch.float32)
+            pipe.to(cfg.device)
+            LocalGenerator._pipeline = pipe
+        else:
+            pipe = LocalGenerator._pipeline
+            
         image = pipe(prompt=prompt, width=cfg.width, height=cfg.height, num_inference_steps=28).images[0]
         if image.mode != "RGB":
             image = image.convert("RGB")
@@ -125,7 +141,7 @@ class DummyGenerator(ImageGenerator):
     測試用：不用 API，直接生成漸層色 JPEG 圖片。
     讓使用者在沒有 API key 的情況下也能測試整個 pipeline。
     """
-    def generate(self, prompt: str, output_path: str) -> str:
+    def _generate_impl(self, prompt: str, output_path: str) -> str:
         width, height = 2400, 1600  # 4MP minimum
         img = Image.new("RGB", (width, height), color=(30, 40, 60))
         draw = ImageDraw.Draw(img)

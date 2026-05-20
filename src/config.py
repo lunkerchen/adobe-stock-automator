@@ -112,9 +112,26 @@ class CloakConfig(BaseModel):
     humanize: bool = True
 
 
+class FreepikFTPConfig(BaseModel):
+    host: str = "ftp.freepik.com"
+    port: int = 21
+    username: str = ""
+    password: str = ""
+
+
+class FreepikMetadataConfig(BaseModel):
+    model: str = "DALL-E 3"
+
+
+class FreepikConfig(BaseModel):
+    ftp: FreepikFTPConfig = FreepikFTPConfig()
+    metadata: FreepikMetadataConfig = FreepikMetadataConfig()
+
+
 class Config(BaseModel):
     adobe: AdobeConfig = AdobeConfig()
     pixta: PixtaConfig = PixtaConfig()
+    freepik: FreepikConfig = FreepikConfig()
     generation: GenerationConfig = GenerationConfig()
     output: OutputConfig = OutputConfig()
     metadata: MetadataConfig = MetadataConfig()
@@ -154,6 +171,12 @@ def load_config(path: str = "config.yaml") -> Config:
         cfg.pixta.contributor.email = os.getenv("PIXTA_EMAIL", "")
     if os.getenv("PIXTA_PASSWORD"):
         cfg.pixta.contributor.password = os.getenv("PIXTA_PASSWORD", "")
+    if os.getenv("FREEPIK_FTP_HOST"):
+        cfg.freepik.ftp.host = os.getenv("FREEPIK_FTP_HOST", "")
+    if os.getenv("FREEPIK_FTP_USERNAME"):
+        cfg.freepik.ftp.username = os.getenv("FREEPIK_FTP_USERNAME", "")
+    if os.getenv("FREEPIK_FTP_PASSWORD"):
+        cfg.freepik.ftp.password = os.getenv("FREEPIK_FTP_PASSWORD", "")
 
     _CONFIG = cfg
     return cfg

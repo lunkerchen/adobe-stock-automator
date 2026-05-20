@@ -61,3 +61,12 @@ browser:
   slow_mo: 800
   cookie_cache: "./.cookies/adobe_stock.json"
   submit_url: "https://contributor.stock.adobe.com/en/uploads"
+
+freepik:
+  ftp:
+    host: "ftp.freepik.com"
+    port: 21
+    username: "your_freepik_ftp_username"
+    password: "your_freepik_ftp_password"
+  metadata:
+    model: "DALL-E 3"

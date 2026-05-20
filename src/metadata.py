@@ -53,6 +53,8 @@ class ImageMetadata:
         category: str = "",
         ai_generated: bool = True,
         has_releases: bool = False,
+        prompt: str = "",
+        model: str = "",
     ):
         self.filename = filename
         self.title = title
@@ -61,6 +63,8 @@ class ImageMetadata:
         self.category = category
         self.ai_generated = ai_generated
         self.has_releases = has_releases
+        self.prompt = prompt
+        self.model = model
 
 
 class MetadataGenerator:
@@ -78,10 +82,23 @@ class MetadataGenerator:
         self.api_key = api_key
         self.model = model
 
-    def generate(self, prompt: str, filename: str) -> ImageMetadata:
+    def generate(self, prompt: str, filename: str, model_name: str = "") -> ImageMetadata:
         if self.api_key:
-            return self._with_llm(prompt, filename)
-        return self._heuristic(prompt, filename)
+            meta = self._with_llm(prompt, filename)
+        else:
+            meta = self._heuristic(prompt, filename)
+        
+        meta.prompt = prompt
+        meta.model = model_name
+        
+        # Add _ai_generated tag to keywords if AI content to satisfy Freepik requirements
+        if meta.ai_generated:
+            ai_tags = {"_ai_generated", "ai_generated", "ai-generated", "generative ai"}
+            if not any(tag in [k.lower().strip() for k in meta.keywords] for tag in ai_tags):
+                # Freepik allows up to 50 keywords. Keep it clean.
+                meta.keywords.append("_ai_generated")
+                
+        return meta
 
     def _with_llm(self, prompt: str, filename: str) -> ImageMetadata:
         system = """You are an Adobe Stock metadata expert. Generate metadata for stock photos.
@@ -164,17 +181,45 @@ Respond in JSON:
 
 # ── CSV 輸出 (Adobe Stock 格式) ──────────────────────────
 
+ADOBE_CATEGORY_IDS = {
+    "3d-renders": "2",
+    "abstract": "2",
+    "animals": "3",
+    "buildings-landmarks": "4",
+    "business-finance": "5",
+    "education": "6",
+    "food-drink": "7",
+    "healthcare-medical": "20",
+    "holidays": "8",
+    "industrial": "10",
+    "illustrations-vectors": "2",
+    "nature": "11",
+    "objects": "12",
+    "people": "13",
+    "religious": "14",
+    "science": "15",
+    "signs-symbols": "16",
+    "sports-fitness": "17",
+    "technology": "18",
+    "travel": "19",
+    "vintage": "21",
+}
+
 
 def metadata_to_csv_row(meta: ImageMetadata) -> list[str]:
     kw_str = ", ".join(meta.keywords)
+    # Standardize category string for dict lookup
+    cat_key = meta.category.lower().strip().replace("/", "-").replace(" & ", "-").replace(" ", "-")
+    cat_id = ADOBE_CATEGORY_IDS.get(cat_key, "2")  # Default to Abstract (2)
+    
+    release_val = "Release" if meta.has_releases else ""
+    
     return [
         meta.filename,
         meta.title,
-        meta.description,
         kw_str,
-        meta.category,
-        "Y" if meta.ai_generated else "N",
-        "Y" if meta.has_releases else "N",
+        cat_id,
+        release_val,
     ]
 
 
@@ -185,12 +230,49 @@ def write_metadata_csv(metadata_list: list[ImageMetadata], output_path: str):
         writer.writerow([
             "Filename",
             "Title",
-            "Description",
             "Keywords",
             "Category",
-            "AI Generated",
-            "Has Releases",
+            "Releases",
         ])
         for meta in metadata_list:
             writer.writerow(metadata_to_csv_row(meta))
-    console.print(f"[green]✓[/green] Metadata CSV: {output_path}")
+    console.print(f"[green]✓[/green] Metadata CSV (Adobe Format): {output_path}")
+
+
+def write_freepik_csv(metadata_list: list[ImageMetadata], output_path: str):
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", newline="", encoding="utf-8") as f:
+        # Freepik CSV requires semicolon delimiter
+        writer = csv.writer(f, delimiter=";")
+        writer.writerow([
+            "File name",
+            "Title",
+            "Keywords",
+            "Prompt",
+            "Model",
+        ])
+        for meta in metadata_list:
+            # Limit title to 100 chars for Freepik constraints
+            title = meta.title
+            if len(title) > 100:
+                truncated = title[:99]
+                last_space = truncated.rfind(" ")
+                if last_space > 50:
+                    title = title[:last_space].rstrip(",. ;:") + "."
+                else:
+                    title = truncated.rstrip(",. ;:") + "."
+
+            keywords = list(meta.keywords)
+            if meta.ai_generated:
+                ai_tags = {"_ai_generated", "ai_generated", "ai-generated", "generative ai"}
+                if not any(tag in [k.lower().strip() for k in keywords] for tag in ai_tags):
+                    keywords.append("_ai_generated")
+            kw_str = ", ".join(keywords)
+            writer.writerow([
+                meta.filename,
+                title,
+                kw_str,
+                meta.prompt,
+                meta.model or "DALL-E 3",
+            ])
+    console.print(f"[green]✓[/green] Metadata CSV (Freepik Format): {output_path}")

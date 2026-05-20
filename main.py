@@ -52,6 +52,22 @@ def cli(config: str):
         )
 
 
+def get_model_name(provider: str | None) -> str:
+    cfg = get_config()
+    prov = provider or cfg.generation.provider
+    if prov == "openai":
+        return cfg.generation.openai.model
+    elif prov == "stability":
+        return cfg.generation.stability.model
+    elif prov == "replicate":
+        return cfg.generation.replicate.model
+    elif prov == "local":
+        return cfg.generation.local.model_id.split("/")[-1]
+    elif prov == "dummy":
+        return "Dummy Generator"
+    return "AI Generator"
+
+
 @cli.command()
 @click.argument("prompt")
 @click.option("--count", "-n", default=1, help="Number of images to generate")
@@ -61,6 +77,7 @@ def cli(config: str):
 @click.option("--no-csv", is_flag=True, help="Skip CSV metadata")
 @click.option("--submit/--no-submit", default=True, help="Use browser to upload + auto-fill metadata (default: on)")
 @click.option("--ai-key", default=None, help="OpenAI API key for metadata")
+@click.option("--freepik", is_flag=True, help="Upload and export CSV for Freepik")
 def generate(
     prompt: str,
     count: int,
@@ -70,6 +87,7 @@ def generate(
     no_csv: bool,
     submit: bool,
     ai_key: Optional[str],
+    freepik: bool,
 ):
     """
     生成圖片 → Browser 上傳 + 自動填寫 Metadata
@@ -78,10 +96,11 @@ def generate(
 
     流程:
     1. 用 AI 生成圖片 (支援 dummy 模式免 API key)
-    2. 產出 CSV metadata
-    3. 開啟瀏覽器登入 Adobe Stock Contributor
-    4. 自動上傳檔案 + 填寫 title/keywords/AI 標籤
-    5. 你自己在瀏覽器點 Submit All
+    2. 產出 CSV metadata (可選 Adobe / Freepik 格式)
+    3. 自動上傳檔案至 Freepik FTP（如果啟用 --freepik）
+    4. 開啟瀏覽器登入 Adobe Stock Contributor
+    5. 自動上傳檔案 + 填寫 title/keywords/AI 標籤
+    6. 你自己在瀏覽器點 Submit All
     """
     cfg = get_config()
     output_dir = Path(output or cfg.output.dir)
@@ -96,6 +115,7 @@ def generate(
     image_paths = []
     metadata_list = []
     meta_gen = MetadataGenerator(api_key=ai_key or cfg.generation.openai.api_key)
+    model_name = get_model_name(provider)
 
     for i in range(count):
         ts = int(time.time() * 1000)
@@ -105,7 +125,7 @@ def generate(
         try:
             generator.generate(prompt, filepath)
             image_paths.append(filepath)
-            meta = meta_gen.generate(prompt, filename)
+            meta = meta_gen.generate(prompt, filename, model_name=model_name)
             metadata_list.append(meta)
             console.print(f"  [green]✓[/green] {filename}")
         except Exception as e:
@@ -122,12 +142,16 @@ def generate(
     if not no_csv:
         csv_path = output_dir / "metadata.csv"
         write_metadata_csv(metadata_list, str(csv_path))
+        if freepik:
+            from src.metadata import write_freepik_csv
+            freepik_csv = output_dir / "metadata_freepik.csv"
+            write_freepik_csv(metadata_list, str(freepik_csv))
 
     # ── 3. FTP Upload ──
     if not no_upload:
-        success, total = ftp_upload_all(image_paths)
-        if success < total:
-            console.print(f"[yellow]⚠ {total - success} files failed[/yellow]")
+        ftp_upload_all(image_paths, platform="adobe-stock")
+        if freepik:
+            ftp_upload_all(image_paths, platform="freepik")
 
     # ── 4. Browser submit (default on) ──
     if submit:
@@ -159,7 +183,8 @@ def generate(
 @click.option("--count", "-n", default=1, help="Images per prompt")
 @click.option("--no-upload", is_flag=True)
 @click.option("--submit", is_flag=True)
-def batch(batch_file: str, count: int, no_upload: bool, submit: bool):
+@click.option("--freepik", is_flag=True, help="Upload and export CSV for Freepik")
+def batch(batch_file: str, count: int, no_upload: bool, submit: bool, freepik: bool):
     """Batch process: one prompt per line in text file."""
     prompts = Path(batch_file).read_text().strip().splitlines()
     prompts = [p.strip() for p in prompts if p.strip()]
@@ -170,6 +195,7 @@ def batch(batch_file: str, count: int, no_upload: bool, submit: bool):
 
     generator = get_generator()
     meta_gen = MetadataGenerator(api_key=cfg.generation.openai.api_key)
+    model_name = get_model_name(cfg.generation.provider)
 
     all_paths = []
     all_metadata = []
@@ -183,15 +209,20 @@ def batch(batch_file: str, count: int, no_upload: bool, submit: bool):
             try:
                 generator.generate(prompt, filepath)
                 all_paths.append(filepath)
-                all_metadata.append(meta_gen.generate(prompt, filename))
+                all_metadata.append(meta_gen.generate(prompt, filename, model_name=model_name))
                 console.print(f"  [green]✓[/green] {filename}")
             except Exception as e:
                 console.print(f"  [red]✗[/red] {e}")
 
     write_metadata_csv(all_metadata, str(output_dir / "metadata.csv"))
+    if freepik:
+        from src.metadata import write_freepik_csv
+        write_freepik_csv(all_metadata, str(output_dir / "metadata_freepik.csv"))
 
     if not no_upload and all_paths:
-        ftp_upload_all(all_paths)
+        ftp_upload_all(all_paths, platform="adobe-stock")
+        if freepik:
+            ftp_upload_all(all_paths, platform="freepik")
 
     if submit:
         import asyncio
@@ -464,6 +495,70 @@ def requirements(platform: Optional[str]):
         "  Use: python3 main.py cloak \"prompt\" --platform adobe-stock",
         border_style="cyan",
     ))
+
+
+@cli.command()
+@click.option("--platform", "--pl", default="freepik", help="Target platform (pixta, adobe-stock, freepik)")
+@click.option("--email", default=None, help="Platform login email")
+@click.option("--password", default=None, help="Platform login password")
+@click.option("--headless", is_flag=True, help="Run CloakBrowser headless")
+@click.option("--skip-upload", is_flag=True, help="Skip file upload, only login")
+def upload(
+    platform: str,
+    email: Optional[str],
+    password: Optional[str],
+    headless: bool,
+    skip_upload: bool,
+):
+    """使用 CloakBrowser 上傳 output 目錄下的所有現有 JPEG 圖片。"""
+    cfg = get_config()
+    output_dir = Path(cfg.output.dir)
+
+    # Find all JPEG files in output
+    image_paths = sorted([str(p) for p in output_dir.glob("*.jpg")] + [str(p) for p in output_dir.glob("*.jpeg")])
+    if not image_paths:
+        console.print("[red]No JPG/JPEG images found in output directory.[/red]")
+        sys.exit(1)
+
+    console.print(f"Found {len(image_paths)} images to upload.")
+
+    # Resolve credentials
+    if platform == "pixta":
+        cred_email = email or cfg.pixta.contributor.email
+        cred_password = password or cfg.pixta.contributor.password
+    elif platform == "adobe-stock":
+        cred_email = email or cfg.adobe.contributor.email
+        cred_password = password or cfg.adobe.contributor.password
+    elif platform == "freepik":
+        cred_email = email or (cfg.freepik.contributor.email if hasattr(cfg.freepik, 'contributor') else "")
+        cred_password = password or (cfg.freepik.contributor.password if hasattr(cfg.freepik, 'contributor') else "")
+    else:
+        cred_email = email or ""
+        cred_password = password or ""
+
+    console.print(f"\n[bold]Launching CloakBrowser for {platform}...[/bold]")
+
+    try:
+        with CloakUploader(
+            platform=platform,
+            headless=headless,
+            slow_mo=500,
+            humanize=True,
+        ) as uploader:
+            uploader.run(
+                metadata_list=[],
+                file_paths=image_paths if not skip_upload else None,
+                email=cred_email,
+                password=cred_password,
+                skip_upload=skip_upload,
+                skip_metadata=True,
+            )
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Interrupted by user.[/yellow]")
+    except Exception as e:
+        console.print(f"[red]CloakBrowser error: {e}[/red]")
+        import traceback
+        console.print(traceback.format_exc())
 
 
 if __name__ == "__main__":
