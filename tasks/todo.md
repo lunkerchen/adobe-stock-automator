@@ -19,4 +19,4 @@
 
 - [x] 確認待提交檔案只包含新增生圖流程相關內容 -> 驗證: `git status --short` 與 diff 無 output 圖片/CSV。
 - [x] 重新執行最小驗證 -> 驗證: Python 編譯與 dashboard TypeScript 檢查通過。
-- [ ] 建立 commit 並推送到 GitHub -> 驗證: `git push origin main` 成功。
+- [x] 建立 commit 並推送到 GitHub -> 驗證: `git push origin main` 成功，commit `ad54940` 已推到 `origin/main`。
