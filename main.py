@@ -65,6 +65,8 @@ def get_model_name(provider: str | None) -> str:
         return cfg.generation.local.model_id.split("/")[-1]
     elif prov == "dummy":
         return "Dummy Generator"
+    elif prov == "chatgpt-web-gen":
+        return "ChatGPT Web Gen"
     return "AI Generator"
 
 

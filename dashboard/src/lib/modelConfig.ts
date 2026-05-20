@@ -167,4 +167,22 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     defaultQuality: "auto",
     defaultFormat: "png",
   },
+  "chatgpt-web-gen": {
+    models: [
+      { label: "ChatGPT Web Gen", value: "chatgpt-web-gen" },
+    ],
+    sizes: [
+      { label: "ChatGPT Default", value: "chatgpt-default" },
+    ],
+    qualities: [
+      { label: "Auto", value: "auto" },
+    ],
+    formats: [
+      { label: "JPEG", value: "jpeg" },
+    ],
+    defaultModel: "chatgpt-web-gen",
+    defaultSize: "chatgpt-default",
+    defaultQuality: "auto",
+    defaultFormat: "jpeg",
+  },
 };

@@ -3,7 +3,7 @@
 > **🌐 Languages**
 > [繁體中文](README.md) · [English](README.en.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md)
 
-AI 圖庫圖片自動化生成、優化與多平台發布工具。支援 Codex CLI（ChatGPT 訂閱）或 OpenAI/Stability/Replicate 等多種生圖引擎，自動產出符合 Adobe Stock 及 Freepik 規格的圖片與 Metadata，並透過 FTPS 或 CloakBrowser 自動化網頁上傳。
+AI 圖庫圖片自動化生成、優化與多平台發布工具。支援 Codex CLI（ChatGPT 訂閱）、chatgpt-web-gen（ChatGPT Web CLI）、OpenAI/Stability/Replicate 等多種生圖引擎，自動產出符合 Adobe Stock 及 Freepik 規格的圖片與 Metadata，並透過 FTPS 或 CloakBrowser 自動化網頁上傳。
 
 ## 流程
 
@@ -32,6 +32,9 @@ cp config.example.yaml config.yaml
 
 # 測試生成圖片 (免 API Key 測試 dummy 模式，同時生成 Adobe 與 Freepik 資訊)
 python3 main.py generate "neon retro synthwave sunset" -n 1 -p dummy --freepik
+
+# 使用 chatgpt-web-gen CLI 生圖（需先在該專案執行 python gen.py --login）
+python3 main.py generate "commercial lifestyle photo of a modern desk setup" -n 1 -p chatgpt-web-gen --no-submit
 
 # 上傳 output 目錄下的所有現有 JPEG 圖片 (以 Freepik 網頁端為例)
 python3 main.py upload --platform freepik
@@ -64,7 +67,7 @@ adobe-stock-automator/
 ├── main.py                     # CLI 入口 (Click)
 ├── src/
 │   ├── config.py               # YAML 設定載入與環境變數覆蓋
-│   ├── generate.py             # 圖片生成 (dummy/openai/stability/replicate/local)
+│   ├── generate.py             # 圖片生成 (dummy/openai/stability/replicate/local/chatgpt-web-gen)
 │   ├── image_utils.py          # 圖片解析度偵測與 6MP+ Lanczos 優化
 │   ├── metadata.py             # Metadata 產生與 Adobe/Freepik 雙 CSV 格式寫入
 │   ├── upload.py               # FTP / FTPS (Explicit TLS) 上傳邏輯

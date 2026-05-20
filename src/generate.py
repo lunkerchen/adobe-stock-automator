@@ -6,6 +6,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import subprocess
 import struct
 import time
 import zlib
@@ -177,6 +178,46 @@ class DummyGenerator(ImageGenerator):
         return output_path
 
 
+class ChatGPTWebGenGenerator(ImageGenerator):
+    """
+    使用 lunkerchen/chatgpt-web-gen 的本機 CLI，透過 ChatGPT Web 生圖。
+    需先在該專案執行 `python gen.py --login` 建立 cookies.json。
+    """
+    def _generate_impl(self, prompt: str, output_path: str) -> str:
+        project_dir = Path(
+            os.getenv("CHATGPT_WEB_GEN_DIR", "/Users/lunker/Developer/Projects/chatgpt-web-gen")
+        )
+        script = project_dir / "gen.py"
+        if not script.exists():
+            raise FileNotFoundError(f"chatgpt-web-gen not found: {script}")
+
+        proc = subprocess.run(
+            ["python3", str(script), prompt],
+            cwd=project_dir,
+            text=True,
+            capture_output=True,
+            timeout=210,
+            check=False,
+        )
+        if proc.returncode != 0:
+            msg = (proc.stderr or proc.stdout).strip()
+            raise RuntimeError(f"chatgpt-web-gen failed: {msg}")
+
+        image_path = None
+        for line in proc.stdout.splitlines():
+            if line.startswith("IMAGE:"):
+                image_path = Path(line.removeprefix("IMAGE:").strip())
+                break
+        if not image_path or not image_path.exists():
+            raise RuntimeError("chatgpt-web-gen did not return an IMAGE path")
+
+        img = Image.open(image_path)
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+        img.save(output_path, "JPEG", quality=get_config().output.quality)
+        return output_path
+
+
 # ── Factory ────────────────────────────────────────────────
 
 GENERATORS: dict[str, type[ImageGenerator]] = {
@@ -185,6 +226,7 @@ GENERATORS: dict[str, type[ImageGenerator]] = {
     "replicate": ReplicateGenerator,
     "local": LocalGenerator,
     "dummy": DummyGenerator,
+    "chatgpt-web-gen": ChatGPTWebGenGenerator,
 }
 
 
