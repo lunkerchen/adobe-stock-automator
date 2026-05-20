@@ -203,7 +203,7 @@ export function ConfigPanel() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-[hsl(240_5%_10%)] border-border">
-                    {["openai", "stability", "replicate", "local", "dummy", "chatgpt-web-gen"].map((p) => (
+                    {["openai", "stability", "replicate", "local", "dummy", "chatgpt-web-gen", "baoyu-imagine"].map((p) => (
                       <SelectItem key={p} value={p}>{p}</SelectItem>
                     ))}
                   </SelectContent>

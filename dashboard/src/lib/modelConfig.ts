@@ -185,4 +185,33 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
     defaultQuality: "auto",
     defaultFormat: "jpeg",
   },
+  "baoyu-imagine": {
+    models: [
+      { label: "GPT Image 2 (OpenAI)", value: "oai:gpt-image-2" },
+      { label: "Gemini Imagen (Google)", value: "goog:gemini-3-pro-image-preview" },
+      { label: "Qwen Image (DashScope)", value: "ds:qwen-image-2.0-pro" },
+      { label: "MiniMax Image", value: "mm:image-01" },
+      { label: "Seedream (Ark)", value: "ark:seedream-5.0" },
+    ],
+    sizes: [
+      { label: "Square 1:1", value: "1:1" },
+      { label: "Landscape 4:3", value: "4:3" },
+      { label: "Portrait 3:4", value: "3:4" },
+      { label: "Wide 16:9", value: "16:9" },
+      { label: "Tall 9:16", value: "9:16" },
+      { label: "Cinema 2.35:1", value: "2.35:1" },
+    ],
+    qualities: [
+      { label: "Normal (1K)", value: "normal" },
+      { label: "2K (High)", value: "2k" },
+    ],
+    formats: [
+      { label: "PNG", value: "png" },
+      { label: "JPEG", value: "jpeg" },
+    ],
+    defaultModel: "oai:gpt-image-2",
+    defaultSize: "4:3",
+    defaultQuality: "2k",
+    defaultFormat: "png",
+  },
 };

@@ -218,6 +218,60 @@ class ChatGPTWebGenGenerator(ImageGenerator):
         return output_path
 
 
+class BaoyuImagineGenerator(ImageGenerator):
+    """
+    使用 baoyu-imagine (bun script) 透過多平台 API 生圖。
+    支援 OpenAI GPT Image、Google Gemini、DashScope、MiniMax 等。
+    需設定對應的 API key 環境變數。
+    """
+    def _generate_impl(self, prompt: str, output_path: str) -> str:
+        import shutil
+        script = Path(
+            os.getenv("BAOYU_IMAGINE_SCRIPT",
+                      os.path.expanduser("~/.agents/skills/baoyu-imagine/scripts/main.ts"))
+        )
+        if not script.exists():
+            raise FileNotFoundError(f"baoyu-imagine not found: {script}")
+
+        bun = shutil.which("bun") or "/opt/homebrew/bin/bun"
+
+        cfg = get_config().generation
+        args = [
+            bun, str(script),
+            "--prompt", prompt,
+            "--image", output_path,
+        ]
+
+        # Optional overrides from config or env
+        sub_provider = os.getenv("BAOYU_IMAGINE_PROVIDER", "")
+        sub_model = os.getenv("BAOYU_IMAGINE_MODEL", "")
+        if sub_provider:
+            args += ["--provider", sub_provider]
+        if sub_model:
+            args += ["--model", sub_model]
+
+        proc = subprocess.run(
+            args,
+            text=True,
+            capture_output=True,
+            timeout=210,
+            check=False,
+        )
+        if proc.returncode != 0:
+            msg = (proc.stderr or "unknown error").strip()
+            raise RuntimeError(f"baoyu-imagine failed: {msg}")
+
+        out_p = Path(output_path)
+        if not out_p.exists():
+            raise RuntimeError(f"baoyu-imagine did not produce output: {output_path}")
+
+        img = Image.open(out_p)
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+        img.save(output_path, "JPEG", quality=get_config().output.quality)
+        return output_path
+
+
 # ── Factory ────────────────────────────────────────────────
 
 GENERATORS: dict[str, type[ImageGenerator]] = {
@@ -227,6 +281,7 @@ GENERATORS: dict[str, type[ImageGenerator]] = {
     "local": LocalGenerator,
     "dummy": DummyGenerator,
     "chatgpt-web-gen": ChatGPTWebGenGenerator,
+    "baoyu-imagine": BaoyuImagineGenerator,
 }
 
 

@@ -11,7 +11,7 @@ adobe:
     port: 21
 
 generation:
-  provider: "openai"  # openai | stability | replicate | local | dummy | chatgpt-web-gen
+  provider: "openai"  # openai | stability | replicate | local | dummy | chatgpt-web-gen | baoyu-imagine
 
   openai:
     api_key: ""

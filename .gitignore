@@ -31,6 +31,9 @@ dashboard/*.tsbuildinfo
 .tmp-*/
 /tmp-codex-*/
 
+# === Skills prefs ===
+.baoyu-skills/
+
 # === IDE ===
 .idea/
 .vscode/

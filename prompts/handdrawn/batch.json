@@ -1,0 +1,35 @@
+{
+  "tasks": [
+    {
+      "id": "pencil-sketch",
+      "promptFiles": ["01-pencil.md"],
+      "image": "../../output/handdrawn-01-pencil-sketch.png",
+      "ar": "4:3"
+    },
+    {
+      "id": "watercolor",
+      "promptFiles": ["02-watercolor.md"],
+      "image": "../../output/handdrawn-02-watercolor.png",
+      "ar": "4:3"
+    },
+    {
+      "id": "pen-ink",
+      "promptFiles": ["03-ink.md"],
+      "image": "../../output/handdrawn-03-pen-ink.png",
+      "ar": "4:3"
+    },
+    {
+      "id": "crayon",
+      "promptFiles": ["04-crayon.md"],
+      "image": "../../output/handdrawn-04-crayon.png",
+      "ar": "4:3"
+    },
+    {
+      "id": "marker",
+      "promptFiles": ["05-marker.md"],
+      "image": "../../output/handdrawn-05-marker.png",
+      "ar": "4:3"
+    }
+  ],
+  "jobs": 3
+}

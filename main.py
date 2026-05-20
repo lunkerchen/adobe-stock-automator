@@ -67,6 +67,8 @@ def get_model_name(provider: str | None) -> str:
         return "Dummy Generator"
     elif prov == "chatgpt-web-gen":
         return "ChatGPT Web Gen"
+    elif prov == "baoyu-imagine":
+        return "Baoyu Imagine"
     return "AI Generator"
 
 
