@@ -1,5 +1,8 @@
 # Adobe Stock & Freepik Automator
 
+> **🌐 Languages**
+> [繁體中文](README.md) · [English](README.en.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md)
+
 AI 圖庫圖片自動化生成、優化與多平台發布工具。支援 Codex CLI（ChatGPT 訂閱）或 OpenAI/Stability/Replicate 等多種生圖引擎，自動產出符合 Adobe Stock 及 Freepik 規格的圖片與 Metadata，並透過 FTPS 或 CloakBrowser 自動化網頁上傳。
 
 ## 流程
@@ -72,7 +75,12 @@ adobe-stock-automator/
 ├── prompts_50.txt              # 50 個商用 prompt 範本
 ├── gen_metadata.py             # 圖片批次優化與 metadata 重新產生工具
 ├── run_50.sh                   # 50 張批次生圖與優化腳本
-└── README.md
+├── README.md                   # 繁體中文
+├── README.en.md                # English
+├── README.ja.md                # 日本語
+├── README.ko.md                # 한국어
+├── README.es.md                # Español
+└── README.fr.md                # Français
 ```
 
 ## 圖庫發布方式支援
