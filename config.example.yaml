@@ -1,0 +1,72 @@
+# Adobe Stock Automator 設定範例
+# 複製為 config.yaml 後填入你的資料
+
+adobe:
+  contributor:
+    email: "your@adobe.com"
+    password: "your_password"
+
+  ftp:
+    host: "ftp.adobe.com"  # 不活躍，建議用瀏覽器上傳
+    port: 21
+
+generation:
+  provider: "openai"  # openai | stability | replicate | local | dummy | chatgpt-web-gen | baoyu-imagine
+
+  openai:
+    api_key: ""
+    model: "dall-e-3"
+    size: "1792x1024"
+    quality: "standard"
+    n: 1
+
+  stability:
+    api_key: ""
+    model: "stable-diffusion-3-5-large"
+    width: 2048
+    height: 2048
+    steps: 40
+
+  replicate:
+    api_token: ""
+    model: "stability-ai/stable-diffusion-3.5"
+
+  local:
+    model_id: "stabilityai/stable-diffusion-3-5-large-turbo"
+    device: "mps"
+    width: 1024
+    height: 1024
+
+output:
+  dir: "./output"
+  prefix: "ads_"
+  quality: 95
+
+metadata:
+  language: "en"
+  min_keywords: 7
+  max_keywords: 50
+  category: null
+  ai_generated: true
+  has_releases: false
+
+upload:
+  mode: "browser"   # browser (推薦) | ftp | csv
+  ftp_upload: false
+  generate_csv: true
+  csv_path: "./output/metadata.csv"
+
+browser:
+  headless: false
+  slow_mo: 800
+  cookie_cache: "./.cookies/adobe_stock.json"
+  submit_url: "https://contributor.stock.adobe.com/en/uploads"
+
+freepik:
+  ftp:
+    host: "ftp.freepik.com"
+    port: 21
+    username: "your_freepik_ftp_username"
+    password: "your_freepik_ftp_password"
+  metadata:
+    model: "DALL-E 3"

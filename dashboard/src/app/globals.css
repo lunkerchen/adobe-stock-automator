@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: hsl(240 6% 7%);
+  --foreground: hsl(0 0% 93%);
+  --card: hsl(240 5% 10%);
+  --card-foreground: hsl(0 0% 93%);
+  --popover: hsl(240 5% 9%);
+  --popover-foreground: hsl(0 0% 93%);
+  --primary: hsl(24 15% 70%);
+  --primary-foreground: hsl(240 6% 7%);
+  --secondary: hsl(240 4% 16%);
+  --secondary-foreground: hsl(0 0% 88%);
+  --muted: hsl(240 4% 14%);
+  --muted-foreground: hsl(0 0% 52%);
+  --accent: hsl(30 20% 85%);
+  --accent-foreground: hsl(240 6% 7%);
+  --destructive: hsl(0 63% 38%);
+  --destructive-foreground: hsl(0 0% 93%);
+  --border: hsl(240 4% 17%);
+  --input: hsl(240 4% 14%);
+  --ring: hsl(24 10% 50%);
+  --radius: 0.5rem;
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(240 4% 20%);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(240 4% 30%);
+}
+
+/* Terminal log area custom */
+.terminal-log::-webkit-scrollbar {
+  width: 4px;
+}
+.terminal-log::-webkit-scrollbar-thumb {
+  background: hsl(240 4% 25%);
+  border-radius: 2px;
+}
+
+/* Selection */
+::selection {
+  background: hsl(24 30% 30% / 0.4);
+}

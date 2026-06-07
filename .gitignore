@@ -1,0 +1,40 @@
+# === Secrets & Config ===
+/config.yaml
+/.env
+*.key
+*.pem
+
+# === Generated Output ===
+/output/
+/.cookies/
+
+# === Python ===
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# === Node.js (dashboard) ===
+dashboard/node_modules/
+dashboard/.next/
+dashboard/*.tsbuildinfo
+
+# === macOS ===
+.DS_Store
+*.swp
+*.swo
+*~
+
+# === Temp ===
+/tmp/
+.tmp-*/
+/tmp-codex-*/
+
+# === Skills prefs ===
+.baoyu-skills/
+
+# === IDE ===
+.idea/
+.vscode/
+*.sublime-*
